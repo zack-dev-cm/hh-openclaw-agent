@@ -43,6 +43,7 @@ python3 skill/hh-openclaw-agent/scripts/render_hh_submission_report.py \
 
 Quote URLs with query strings when running the example in `zsh`.
 The markdown report is redacted by default. Use `--include-sensitive` only when you intentionally need a full export.
+Default shareable output keeps only public `https://*.hh.ru/...` URLs and redacts private artifact paths.
 
 ## What It Covers
 

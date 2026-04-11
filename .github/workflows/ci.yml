@@ -1,0 +1,67 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Compile scripts
+        run: python3 -m py_compile skill/hh-openclaw-agent/scripts/*.py
+
+      - name: Smoke test bundle flow
+        run: |
+          rm -rf /tmp/hh-openclaw-agent-smoke
+          mkdir -p /tmp/hh-openclaw-agent-smoke/artifacts
+          : > /tmp/hh-openclaw-agent-smoke/artifacts/response-form.png
+          python3 skill/hh-openclaw-agent/scripts/init_hh_application_packet.py \
+            --out /tmp/hh-openclaw-agent-smoke/packet.json \
+            --packet-id hh-demo-001 \
+            --vacancy-id 135791357 \
+            --vacancy-title "Senior ML Engineer" \
+            --company-name "Example AI" \
+            --resume-title "Senior ML Engineer / AI Systems" \
+            --vacancy-url 'https://hh.ru/vacancy/135791357' \
+            --apply-url 'https://hh.ru/applicant/vacancy_response?vacancyId=135791357' \
+            --browser-profile hh-main \
+            --cover-letter "Здравствуйте. Мне интересна эта роль, потому что у меня сильный практический опыт в production ML and AI delivery." \
+            --review-status approved \
+            --reviewer zack
+          python3 skill/hh-openclaw-agent/scripts/append_hh_execution_step.py \
+            --manifest /tmp/hh-openclaw-agent-smoke/packet.json \
+            --step-id open-response-flow \
+            --action "Open the direct vacancy response page in a logged-in profile" \
+            --expected "The response form loads and the cover letter field is visible" \
+            --actual "The response form opened normally" \
+            --status passed \
+            --effect inspected \
+            --screenshot artifacts/response-form.png
+          python3 skill/hh-openclaw-agent/scripts/check_hh_submission_bundle.py \
+            --manifest /tmp/hh-openclaw-agent-smoke/packet.json \
+            --repo-root /tmp/hh-openclaw-agent-smoke \
+            --out /tmp/hh-openclaw-agent-smoke/check.json
+          python3 skill/hh-openclaw-agent/scripts/render_hh_submission_report.py \
+            --manifest /tmp/hh-openclaw-agent-smoke/packet.json \
+            --out /tmp/hh-openclaw-agent-smoke/report.md
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+
+          check = json.loads(Path("/tmp/hh-openclaw-agent-smoke/check.json").read_text())
+          assert check["status"] == "ok", check
+          assert check["errors"] == 0, check
+          assert check["warnings"] == 0, check
+          report = Path("/tmp/hh-openclaw-agent-smoke/report.md").read_text()
+          assert "HH Submission Report" in report, report
+          assert "hh-demo-001" in report, report
+          PY

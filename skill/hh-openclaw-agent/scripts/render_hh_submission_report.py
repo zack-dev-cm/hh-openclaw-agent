@@ -13,6 +13,19 @@ def load_manifest(path: Path) -> dict:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
+def is_absolute_or_private(path_text: str) -> bool:
+    return path_text.startswith("/") or path_text.startswith("~") or ":\\" in path_text or path_text.startswith("file://")
+
+
+def safe_display_path(path_text: str) -> str:
+    value = path_text.strip()
+    if not value:
+        return "n/a"
+    if is_absolute_or_private(value):
+        return "[redacted-private-path]"
+    return value
+
+
 def redact_url(url: str, include_sensitive: bool) -> str:
     value = url.strip()
     if not value:
@@ -21,9 +34,14 @@ def redact_url(url: str, include_sensitive: bool) -> str:
         return value
     try:
         parts = urlsplit(value)
-        return urlunsplit((parts.scheme, parts.netloc, parts.path, "", ""))
     except ValueError:
-        return value
+        return "[redacted-private-url]"
+    host = (parts.hostname or "").lower()
+    if parts.scheme != "https":
+        return "[redacted-private-url]"
+    if host == "hh.ru" or host.endswith(".hh.ru"):
+        return urlunsplit((parts.scheme, parts.netloc, parts.path, "", ""))
+    return "[redacted-private-url]"
 
 
 def render_cover_letter(body: str, include_sensitive: bool) -> str:
@@ -44,7 +62,7 @@ def format_artifacts(artifacts: dict[str, str]) -> list[str]:
     for key, label in labels.items():
         value = artifacts.get(key, "").strip()
         if value:
-            out.append(f"{label}: `{value}`")
+            out.append(f"{label}: `{safe_display_path(value)}`")
     return out
 
 
