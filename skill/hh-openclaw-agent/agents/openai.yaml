@@ -1,0 +1,4 @@
+interface:
+  display_name: "HH OpenClaw Agent"
+  short_description: "Prepare a reviewed hh.ru application packet, execute the browser flow, and capture one auditable submission bundle"
+  default_prompt: "Use $hh-openclaw-agent to initialize an hh.ru application packet, append browser execution steps, check the submission bundle, and render a markdown report I can share."
