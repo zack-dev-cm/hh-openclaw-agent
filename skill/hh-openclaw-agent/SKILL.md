@@ -49,6 +49,8 @@ It assumes the browser profile is already authenticated.
 
 5. Render the report.
    - Use `python3 {baseDir}/scripts/render_hh_submission_report.py --manifest <json> --out <md>`.
+   - The default report redacts the cover letter body and strips query strings from apply/outcome URLs.
+   - Add `--include-sensitive` only when you intentionally need a full-content export.
    - Share the report instead of loose screenshots and manual notes.
 
 ## Operating Rules

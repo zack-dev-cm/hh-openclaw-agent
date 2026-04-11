@@ -22,6 +22,10 @@ def is_absolute_or_private(path_text: str) -> bool:
     return path_text.startswith("/") or path_text.startswith("~") or ":\\" in path_text or path_text.startswith("file://")
 
 
+def display_path_label(path: Path) -> str:
+    return path.name or "."
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--manifest", required=True, help="Packet JSON.")
@@ -96,8 +100,8 @@ def main() -> int:
     errors = sum(1 for finding in findings if finding["severity"] == "error")
     warnings = sum(1 for finding in findings if finding["severity"] == "warning")
     report = {
-        "manifest": str(manifest_path),
-        "repo_root": str(repo_root),
+        "manifest": display_path_label(manifest_path),
+        "repo_root": display_path_label(repo_root),
         "status": "ok" if errors == 0 else "fix_required",
         "errors": errors,
         "warnings": warnings,

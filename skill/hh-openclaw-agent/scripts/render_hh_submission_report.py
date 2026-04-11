@@ -6,10 +6,32 @@ from __future__ import annotations
 import argparse
 import json
 from pathlib import Path
+from urllib.parse import urlsplit, urlunsplit
 
 
 def load_manifest(path: Path) -> dict:
     return json.loads(path.read_text(encoding="utf-8"))
+
+
+def redact_url(url: str, include_sensitive: bool) -> str:
+    value = url.strip()
+    if not value:
+        return "n/a"
+    if include_sensitive:
+        return value
+    try:
+        parts = urlsplit(value)
+        return urlunsplit((parts.scheme, parts.netloc, parts.path, "", ""))
+    except ValueError:
+        return value
+
+
+def render_cover_letter(body: str, include_sensitive: bool) -> str:
+    if not body:
+        return "_No cover letter recorded._"
+    if include_sensitive:
+        return body
+    return "_Redacted by default. Re-run with `--include-sensitive` for a full export._"
 
 
 def format_artifacts(artifacts: dict[str, str]) -> list[str]:
@@ -30,6 +52,11 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--manifest", required=True, help="Packet JSON.")
     parser.add_argument("--out", required=True, help="Output markdown file.")
+    parser.add_argument(
+        "--include-sensitive",
+        action="store_true",
+        help="Include the full cover letter body and unredacted apply/outcome URLs.",
+    )
     args = parser.parse_args()
 
     manifest_path = Path(args.manifest).expanduser().resolve()
@@ -51,8 +78,8 @@ def main() -> int:
         f"- Vacancy title: {packet.get('vacancy_title', '')}",
         f"- Company: {packet.get('company_name', '')}",
         f"- Resume title: {packet.get('resume_title', '')}",
-        f"- Vacancy URL: {packet.get('vacancy_url', '')}",
-        f"- Apply URL: {packet.get('apply_url', '')}",
+        f"- Vacancy URL: {redact_url(packet.get('vacancy_url', ''), args.include_sensitive)}",
+        f"- Apply URL: {redact_url(packet.get('apply_url', ''), args.include_sensitive)}",
         f"- Browser profile: {packet.get('browser_profile', '') or 'n/a'}",
         f"- Review status: **{review.get('status', 'unknown')}**",
         f"- Reviewer: {review.get('reviewer', '') or 'n/a'}",
@@ -61,7 +88,7 @@ def main() -> int:
         "",
         "## Cover Letter",
         "",
-        content.get("cover_letter", "") or "_No cover letter recorded._",
+        render_cover_letter(content.get("cover_letter", ""), args.include_sensitive),
         "",
         "## Steps",
         "",
@@ -79,7 +106,7 @@ def main() -> int:
         if step.get("issue_keys"):
             lines.append(f"- Issue keys: {', '.join(step['issue_keys'])}")
         if step.get("outcome_url"):
-            lines.append(f"- Outcome URL: {step['outcome_url']}")
+            lines.append(f"- Outcome URL: {redact_url(step['outcome_url'], args.include_sensitive)}")
         artifact_parts = format_artifacts(step.get("artifacts", {}))
         if artifact_parts:
             lines.append(f"- Artifacts: {'; '.join(artifact_parts)}")

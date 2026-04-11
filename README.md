@@ -42,13 +42,14 @@ python3 skill/hh-openclaw-agent/scripts/render_hh_submission_report.py \
 ```
 
 Quote URLs with query strings when running the example in `zsh`.
+The markdown report is redacted by default. Use `--include-sensitive` only when you intentionally need a full export.
 
 ## What It Covers
 
 - one machine-readable application packet for a single `hh.ru` response flow
 - evidence-backed execution steps for review, browser interaction, submit, and outcome capture
 - bundle validation for approval-gate mistakes, missing failure detail, and absolute artifact paths
-- a shareable markdown report for review, debugging, or job-funnel records
+- a shareable markdown report for review, debugging, or job-funnel records, with sensitive fields redacted by default
 
 ## Included
 
