@@ -6,6 +6,22 @@ HH OpenClaw Agent is a small public OpenClaw skill for `hh.ru` application work.
 an application packet, records OpenClaw execution steps, checks the resulting submission bundle, and renders
 a shareable markdown report for review, debugging, or funnel tracking.
 
+## Proof
+
+```md
+# HH Submission Report
+
+- Apply URL: https://hh.ru/applicant/vacancy_response
+- Review status: **pending**
+
+## Cover Letter
+
+_Redacted by default._
+
+### 1. open-response-flow
+- Artifacts: screenshot: `artifacts/response-form.png`
+```
+
 ## Quick Start
 
 ```bash
