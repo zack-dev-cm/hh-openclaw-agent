@@ -86,4 +86,4 @@ Default shareable output keeps only public `https://*.hh.ru/...` URLs and redact
 
 ## License
 
-MIT
+MIT No Attribution (MIT-0)
